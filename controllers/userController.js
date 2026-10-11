@@ -1,3 +1,5 @@
+const { estNonVide, estEmailValide } = require('../utils/validators');
+
 let users = [
   { id: 1, name: 'Aya',    email: 'aya@gmail.com' },
   { id: 2, name: 'farah',  email: 'farah@gmail.com' },
@@ -24,11 +26,22 @@ const getUserById = (req, res) => {
 };
 
 const createUser = (req, res) => {
-  const { name, email } = req.body;
-  if (!name || !email) {
-    return res.status(400).json({ error: "Le nom et l'email sont obligatoires" });
+  const { name, email, role } = req.body;
+
+  if (!estNonVide(name)) {
+    return res.status(400).json({ error: "Le nom est obligatoire et ne peut pas être vide" });
   }
-  const nouvelUtilisateur = { id: prochainUserId++, name, email };
+  if (!estEmailValide(email)) {
+    return res.status(400).json({ error: "L'email est invalide (doit contenir '@' et '.')" });
+  }
+
+  const nouvelUtilisateur = {
+    id: prochainUserId++,
+    name: name.trim(),
+    email: email.trim(),
+    role: role || 'reader'
+  };
+
   users.push(nouvelUtilisateur);
   res.status(201).json({ message: 'Utilisateur créé', user: nouvelUtilisateur });
 };
