@@ -1,81 +1,58 @@
-const { estNonVide, estEmailValide } = require('../utils/validators');
-
 let users = [
-  { id: 1, name: 'Aya',    email: 'aya@gmail.com' },
-  { id: 2, name: 'farah',  email: 'farah@gmail.com' },
-  { id: 3, name: 'chaima', email: 'chaima@gmail.com' }
+  { id: 1, name: 'Aya', email: 'aya@example.com' , role: 'user'},
+  { id: 2, name: 'Omar', email: 'omar@example.com' , role: 'user'},
 ];
-let prochainUserId = 4;
 
 const getAllUsers = (req, res) => {
-  const { name } = req.query;
-  let resultat = users;
-  if (name) {
-    resultat = users.filter(u => u.name === name);
+  const { role } = req.query;
+  let filteredUsers = users;
+  if (role) {
+    filteredUsers = users.filter(user => user.role === role);
   }
-  res.status(200).json({ total: resultat.length, users: resultat });
-};
+  res.json(filteredUsers);
+}
+
 
 const getUserById = (req, res) => {
-  const id = Number(req.params.id);
-  const user = users.find(u => u.id === id);
-  if (!user) {
-    return res.status(404).json({ error: `Utilisateur ${id} introuvable` });
-  }
-  res.status(200).json(user);
-};
+    const id = Number(req.params.id);
+    const user = users.find(u => u.id === id);
+    if (!user) {
+      return res.status(404).json({ error: `Utilisateur ${id} introuvable` });
+    }  
+    res.json(user);
+}
+
+const { estNonVide, estEmailValide } = require('../utils/validators');
 
 const createUser = (req, res) => {
-  const { name, email, role } = req.body;
+    const { name, email, role } = req.body;
 
-  if (!estNonVide(name)) {
-    return res.status(400).json({ error: "Le nom est obligatoire et ne peut pas être vide" });
-  }
-  if (!estEmailValide(email)) {
-    return res.status(400).json({ error: "L'email est invalide (doit contenir '@' et '.')" });
-  }
+   if (!estNonVide(name) || !estNonVide(email) || !estNonVide(role)) {
+      return res.status(400).json({ error: "Le nom, l'email et le rôle ne peuvent pas être vides" });
+    } else if (!estEmailValide(email)) {
+      return res.status(400).json({ error: "L'email n'est pas valide" });
+    }
 
-  const nouvelUtilisateur = {
-    id: prochainUserId++,
-    name: name.trim(),
-    email: email.trim(),
-    role: role || 'reader'
-  };
-
-  users.push(nouvelUtilisateur);
-  res.status(201).json({ message: 'Utilisateur créé', user: nouvelUtilisateur });
-};
-
-const updateUser = (req, res) => {
-  const id = Number(req.params.id);
-  const { name, email } = req.body;
-
-  const index = users.findIndex(u => u.id === id);
-  if (index === -1) {
-    return res.status(404).json({ error: `Utilisateur ${id} introuvable` });
-  }
-  if (!name || !email) {
-    return res.status(400).json({ error: "Le nom et l'email sont obligatoires pour un PUT" });
-  }
-
-  users[index] = { id, name, email };
-  res.status(200).json({ message: 'Utilisateur remplacé', user: users[index] });
-};
+    const newUser = { id: users.length + 1, name, email, role };
+    users.push(newUser);
+    res.status(201).json(newUser);
+}
 
 const deleteUser = (req, res) => {
-  const id = Number(req.params.id);
-  const index = users.findIndex(u => u.id === id);
-  if (index === -1) {
-    return res.status(404).json({ error: `Utilisateur ${id} introuvable` });
-  }
-  const deleted = users.splice(index, 1)[0];
-  res.status(200).json({ message: 'Utilisateur supprimé', user: deleted });
-};
+    const id = Number(req.params.id);
+    const userIndex = users.some(u => u.id === id);
+    if (!userIndex ) {
+      return res.status(404).json({ error: `Utilisateur ${id} introuvable` });
+    }   
+    users = users.filter(u => u.id !== id);
+  res.status(200).json({ message: 'Utilisateur ${id} supprimé avec succès' });
+}
+
+
 
 module.exports = {
-  getAllUsers,
-  getUserById,
-  createUser,
-  updateUser,
-  deleteUser
-};
+    getAllUsers,
+    getUserById,
+    createUser,
+    deleteUser
+}
